@@ -83,7 +83,7 @@ public class ProxyRequestHandler implements Runnable {
                     }
                     proxyToClientWriter.close();
                 }
-                else if (command.substring(0,8).equals("download")) {
+                else if ((command.length() > 8) && command.substring(0,8).equals("download")) {
                     String fileName = command.split("=")[1];
                     String responseFtp = ftpClient.getCurrentFile(fileName);
                     ftpClient.quit();
@@ -104,6 +104,14 @@ public class ProxyRequestHandler implements Runnable {
                     sc.close();
                     proxyToClientWriter.close();
 
+                }
+                else {
+                    String response = "HTTP/1.0 400 Bad Request\n" +
+                            "Proxy-agent: ProxyServer/1.0\n" +
+                            "\r\n";
+                    proxyToClientWriter.write(response);
+                    proxyToClientWriter.write("400 Bad Request");
+                    proxyToClientWriter.close();
                 }
             }else {
                 String responseHTTP = "HTTP/1.0 401 Unauthorized \n" +
@@ -131,44 +139,60 @@ public class ProxyRequestHandler implements Runnable {
         String[] arrayftp = ftpRequest.split("/");
         String ftpHost = arrayftp[0];
         String[] post = postBody.split(" ");
-        String fileName = post[2];
-        if (array.length == 3) {
-            FtpClient ftpClient = new FtpClient(ftpHost);
-            user = array[1];
-            password = array[2];
-            ftpClient.setUser(user);
-            ftpClient.setPassword(password);
 
-            if (ftpClient.authentication()) {
-                String response = ftpClient.loadFileToServer(fileName);
-                ftpClient.quit();
-                logger.setLog("FTP", response);
-                int code = Integer.parseInt(response.substring(0,3));
-                if (code == 226) {
-                    String responseHTTP = "HTTP/1.0 200 OK\n" +
+        if (array.length == 3) {
+            if (post.length == 3) {
+                String fileName = post[2];
+                FtpClient ftpClient = new FtpClient(ftpHost);
+                user = array[1];
+                password = array[2];
+                ftpClient.setUser(user);
+                ftpClient.setPassword(password);
+
+                if (ftpClient.authentication()) {
+                    String response = ftpClient.loadFileToServer(fileName);
+                    ftpClient.quit();
+                    logger.setLog("FTP", response);
+                    int code = Integer.parseInt(response.substring(0, 3));
+                    if (code == 226) {
+                        String responseHTTP = "HTTP/1.0 200 OK\n" +
+                                "Proxy-agent: ProxyServer/1.0\n" +
+                                "\r\n";
+                        proxyToClientWriter.write(responseHTTP);
+                        proxyToClientWriter.write("File Success Download");
+                        proxyToClientWriter.close();
+                    } else {
+                        String responseHTTP = "HTTP/1.0 404 NOT FOUND \n" +
+                                "Proxy-agent: ProxyServer/1.0\n" +
+                                "\r\n";
+                        proxyToClientWriter.write(responseHTTP);
+                        proxyToClientWriter.write("Error FTP SERVER : " + response);
+                        proxyToClientWriter.close();
+                    }
+                } else {
+                    String responseHTTP = "HTTP/1.0 401 Unauthorized \n" +
                             "Proxy-agent: ProxyServer/1.0\n" +
                             "\r\n";
                     proxyToClientWriter.write(responseHTTP);
-                    proxyToClientWriter.write("File Success Download");
+                    proxyToClientWriter.write("Error FTP SERVER : " + ftpClient.incorrectLogin());
                     proxyToClientWriter.close();
-                }
-                else {
-                    String responseHTTP = "HTTP/1.0 404 NOT FOUND \n" +
-                            "Proxy-agent: ProxyServer/1.0\n" +
-                            "\r\n";
-                    proxyToClientWriter.write(responseHTTP);
-                    proxyToClientWriter.write("Error FTP SERVER : " + response);
-                    proxyToClientWriter.close();
+                    logger.setLog("FTP", ftpClient.incorrectLogin());
                 }
             } else {
-                String responseHTTP = "HTTP/1.0 401 Unauthorized \n" +
+                String responseHTTP = "HTTP/1.0 400 Bad Request \n" +
                         "Proxy-agent: ProxyServer/1.0\n" +
                         "\r\n";
                 proxyToClientWriter.write(responseHTTP);
-                proxyToClientWriter.write("Error FTP SERVER : " + ftpClient.incorrectLogin());
+                proxyToClientWriter.write("Incorrect field post body");
                 proxyToClientWriter.close();
-                logger.setLog("FTP", ftpClient.incorrectLogin());
             }
+        } else {
+            String responseHTTP = "HTTP/1.0 401 Unauthorized \n" +
+                    "Proxy-agent: ProxyServer/1.0\n" +
+                    "\r\n";
+            proxyToClientWriter.write(responseHTTP);
+            proxyToClientWriter.write("Error Field User or Password");
+            proxyToClientWriter.close();
         }
     }
 

@@ -198,7 +198,8 @@ public class FtpClient {
 
         }catch (IOException e) {
             System.out.println("There was a problem:" + e);
-            e.printStackTrace();
+            responseCode = "404 No such file or directory";
+            //e.printStackTrace();
         }
         return responseCode;
     }
