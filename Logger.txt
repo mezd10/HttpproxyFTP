@@ -1,0 +1,22 @@
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 226 Successfully transferred "/"
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 530 Login or password incorrect!
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 226 Successfully transferred "/"
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 226 Successfully transferred "/"
+HTTP : POST /192.168.1.45 HTTP/1.1
+FTP : 226 Successfully transferred "/HelloKolya1.txt"
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 226 Successfully transferred "/"
+HTTP : GET /192.168.1.45/download?file=HelloKolya1.txt HTTP/1.1
+FTP : 226 Successfully transferred "/HelloKolya1.txt"
+HTTP : GET /192.168.1.45/list HTTP/1.1
+FTP : 226 Successfully transferred "/"
+HTTP : GET /192.168.1.45/download?file=friday.txt HTTP/1.1
+FTP : 226 Successfully transferred "/friday.txt"
+HTTP : GET /192.168.1.45/download?file=friday.txt HTTP/1.1
+FTP : 530 Login or password incorrect!
+HTTP : GET /192.168.1.45/download?file=friday.txt HTTP/1.1
+FTP : 226 Successfully transferred "/friday.txt"
